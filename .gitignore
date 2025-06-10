@@ -25,8 +25,26 @@ users.json
 
 # Monitor data storage
 monitors.json
+
+# Alert history (may contain sensitive emails)
+alerts.json
+
+# Temporary test files
+*test*.php
+send_*.php
+debug_*.php
+check_*.php
+quick_*.php
+
+# Log files and monitoring data
 logs/
 *.log
+server.log
+monitor.log
+
+# Sensitive configuration backups
+config.php.bak
+.env.backup
 
 # OS generated files
 .DS_Store
