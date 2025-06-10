@@ -17,21 +17,21 @@
 
 ## 🌐 Monitor Configuration
 
-- [ ] **Issue #2**: Add form to submit monitored URLs and notification emails  
-  - [ ] Input fields: URL, email address  
-  - [ ] Validate format of URL and email  
-  - [ ] Save to a data store (e.g. JSON file or database)  
-  - [ ] Prevent duplicate entries  
+- [x] **Issue #2**: Add form to submit monitored URLs and notification emails  
+  - [x] Input fields: URL, email address  
+  - [x] Validate format of URL and email  
+  - [x] Save to a data store (e.g. JSON file or database)  
+  - [x] Prevent duplicate entries  
 
 ---
 
 ## 🕒 Automated Server Monitoring
 
-- [ ] **Issue #3**: Create a cron-compatible PHP script to check monitored URLs  
-  - [ ] Read all monitored URLs from storage  
-  - [ ] Make HTTP requests to each  
-  - [ ] Detect failures (e.g. connection error, non-200 response)  
-  - [ ] Log or report status  
+- [x] **Issue #3**: Create a cron-compatible PHP script to check monitored URLs  
+  - [x] Read all monitored URLs from storage  
+  - [x] Make HTTP requests to each  
+  - [x] Detect failures (e.g. connection error, non-200 response)  
+  - [x] Log or report status  
 
 ---
 
