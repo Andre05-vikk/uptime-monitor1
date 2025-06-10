@@ -4,8 +4,22 @@ require_once 'config.php';
 // Require user to be logged in
 require_login();
 
-// Get current username
+// Handle form submission
+$message = '';
+$message_type = '';
+
+if ($_POST && isset($_POST['url'], $_POST['email'])) {
+    $url = trim($_POST['url']);
+    $email = trim($_POST['email']);
+    
+    $result = add_monitor($url, $email);
+    $message = $result['message'];
+    $message_type = $result['success'] ? 'success' : 'error';
+}
+
+// Get current username and monitors
 $username = $_SESSION['username'] ?? '';
+$monitors = get_monitors();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,6 +107,48 @@ $username = $_SESSION['username'] ?? '';
             margin-bottom: 20px;
             border: 1px solid #bee5eb;
         }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .monitors-list {
+            background: white;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .monitor-item {
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+        .monitor-url {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .monitor-email {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .monitor-date {
+            color: #adb5bd;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -107,10 +163,11 @@ $username = $_SESSION['username'] ?? '';
     <div class="monitor-form">
         <h2>🌐 Add Website Monitor</h2>
         
-        <div class="info">
-            <strong>Note:</strong> You are now logged in and can access the monitoring form. 
-            This form will be functional once Issue #2 (Monitor Configuration) is implemented.
-        </div>
+        <?php if ($message): ?>
+            <div class="<?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
         
         <form method="POST" action="">
             <div class="form-group">
@@ -126,5 +183,18 @@ $username = $_SESSION['username'] ?? '';
             <input type="submit" value="Add Monitor">
         </form>
     </div>
+    
+    <?php if (!empty($monitors)): ?>
+    <div class="monitors-list">
+        <h2>📋 Current Monitors</h2>
+        <?php foreach ($monitors as $monitor): ?>
+            <div class="monitor-item">
+                <div class="monitor-url"><?php echo htmlspecialchars($monitor['url']); ?></div>
+                <div class="monitor-email">📧 <?php echo htmlspecialchars($monitor['email']); ?></div>
+                <div class="monitor-date">Added: <?php echo htmlspecialchars($monitor['added_at']); ?></div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 </body>
 </html>

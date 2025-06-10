@@ -6,12 +6,12 @@
 
 ## 🔐 User Authentication
 
-- [ ] **Issue #1**: Implement user login system  
-  - [ ] Create login form (username and password)  
-  - [ ] Authenticate user against credentials in a database or file  
-  - [ ] Maintain login state using PHP sessions  
-  - [ ] Add logout functionality  
-  - [ ] Show monitor form only when logged in  
+- [x] **Issue #1**: Implement user login system  
+  - [x] Create login form (username and password)  
+  - [x] Authenticate user against credentials in a database or file  
+  - [x] Maintain login state using PHP sessions  
+  - [x] Add logout functionality  
+  - [x] Show monitor form only when logged in  
 
 ---
 
