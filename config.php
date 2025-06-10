@@ -1,6 +1,33 @@
 <?php
 // Basic configuration for uptime monitor application
 
+// Load environment variables from .env file
+function loadEnv($filePath) {
+    if (!file_exists($filePath)) {
+        return;
+    }
+    
+    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) {
+            continue; // Skip comments
+        }
+        
+        list($name, $value) = explode('=', $line, 2);
+        $name = trim($name);
+        $value = trim($value);
+        
+        if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
+            putenv(sprintf('%s=%s', $name, $value));
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
+    }
+}
+
+// Load .env file
+loadEnv(__DIR__ . '/.env');
+
 // Start session for authentication
 session_start();
 
@@ -11,11 +38,11 @@ if (isset($_GET['fresh']) && $_GET['fresh'] === '1') {
     exit();
 }
 
-// Mailgun configuration (set your API key and domain here or via environment variables)
+// Mailgun configuration (now using .env file)
 define('MAILGUN_API_KEY', getenv('MAILGUN_API_KEY') ?: 'your-mailgun-api-key-here');
 define('MAILGUN_DOMAIN', getenv('MAILGUN_DOMAIN') ?: 'your-mailgun-domain.com');
 define('FROM_EMAIL', 'noreply@' . MAILGUN_DOMAIN);
-define('FROM_NAME', 'Uptime Monitor');
+define('FROM_NAME', getenv('FROM_NAME') ?: 'Uptime Monitor');
 
 // Simple file-based user storage (as per requirements)
 define('USERS_FILE', __DIR__ . '/users.json');

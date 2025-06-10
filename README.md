@@ -79,14 +79,16 @@ open http://localhost:8000
 ### Quick Setup
 
 1. **Clone/Download** this repository
-2. **Install dependencies**:
+2. **Configure environment**:
+   ```fish
+   cp .env.example .env
+   # Edit .env file with your Mailgun credentials
+   ```
+3. **Install dependencies**:
    ```fish
    composer install
    npm install  # for testing (optional)
    ```
-3. **Configure email** (optional):
-   - Set `MAILGUN_API_KEY` and `MAILGUN_DOMAIN` environment variables
-   - Or edit values directly in `config.php`
 4. **Start application**:
    ```fish
    ./start.fish
@@ -159,20 +161,44 @@ npm stop
 
 ## ⚙️ Configuration
 
+### Environment Setup (.env)
+
+1. **Create environment file**:
+   ```fish
+   cp .env.example .env
+   ```
+
+2. **Edit .env file** with your credentials:
+   ```bash
+   # Required for email notifications
+   MAILGUN_API_KEY=your-actual-mailgun-api-key
+   MAILGUN_DOMAIN=your-actual-domain.com
+   
+   # Optional customizations
+   FROM_NAME="Your Monitor Name"
+   ADMIN_EMAIL=your-admin@email.com
+   MONITOR_TIMEOUT=10
+   ```
+
 ### Email Setup (Mailgun)
 
-1. **Environment Variables** (recommended):
-   ```fish
-   export MAILGUN_API_KEY="your-api-key"
-   export MAILGUN_DOMAIN="your-domain.com"
+1. **Get Mailgun credentials**:
+   - API Key: https://app.mailgun.com/app/account/security/api_keys
+   - Domain: https://app.mailgun.com/app/domains
+
+2. **Add to .env file**:
+   ```bash
+   MAILGUN_API_KEY=key-1234567890abcdef1234567890abcdef
+   MAILGUN_DOMAIN=mg.yourdomain.com
    ```
 
-2. **Direct Configuration**:
-   Edit `config.php`:
-   ```php
-   define('MAILGUN_API_KEY', 'your-api-key');
-   define('MAILGUN_DOMAIN', 'your-domain.com');
-   ```
+### Alternative: Environment Variables
+
+You can also set environment variables directly:
+```fish
+export MAILGUN_API_KEY="your-api-key"
+export MAILGUN_DOMAIN="your-domain.com"
+```
 
 ### Automated Monitoring (Cron)
 
@@ -204,6 +230,12 @@ crontab -e
 - `config.php` - Configuration and functions
 - `monitor.php` - Cron monitoring script
 
+### Configuration Files
+- `.env` - Environment variables (API keys, settings)
+- `.env.example` - Environment template
+- `composer.json` - PHP dependencies
+- `package.json` - NPM scripts and test dependencies
+
 ### Data Files
 - `users.json` - User credentials (JSON)
 - `monitors.json` - Monitor configurations
@@ -215,35 +247,8 @@ crontab -e
 - `package.json` - NPM scripts configuration
 
 ### Documentation
-- `README.md` - This file
-- `TEST.md` - Testing documentation
-
----
-
-## 🧪 Testing
-
-### Run Test Suite
-
-```fish
-# All tests
-npm test
-
-# Headed mode (visible browser)
-npm run test:headed
-
-# Interactive UI mode
-npm run test:ui
-```
-
-### Test Categories
-
-- **Authentication Tests**: Login/logout/session handling
-- **Monitor Configuration**: Adding/validating monitors
-- **Email Alerts**: Notification system testing
-- **Cron Monitoring**: Automated checking functionality
-- **UI Interface**: User interface validation
-
-**Test Results**: 35/35 tests passing ✅
+- `README.md` - This file (usage guide)
+- `TEST.md` - Complete testing documentation
 
 ---
 
@@ -257,7 +262,7 @@ npm stop           # Stop the server
 npm run dev        # Development mode (same as start)
 npm run server     # PHP server only (no browser)
 npm run monitor    # Run monitoring check
-npm run test       # Run all tests
+npm run test       # Run all tests (see TEST.md for details)
 npm run test:headed # Run tests with visible browser
 npm run test:ui    # Interactive test UI
 ```
@@ -337,8 +342,9 @@ lsof -ti:8000 | xargs kill -9
 ```
 
 **3. Email notifications not working**
-- Check Mailgun API credentials
-- Verify email configuration in `config.php`
+- Check if `.env` file exists: `ls -la .env`
+- Verify Mailgun credentials in `.env` file
+- Get API key from: https://app.mailgun.com/app/account/security/api_keys
 - Test with `php monitor.php` and check logs
 
 **4. Monitors not updating**
@@ -366,6 +372,10 @@ lsof -ti:8000 | xargs kill -9
 ## 🎉 Quick Commands Reference
 
 ```fish
+# Initial setup
+cp .env.example .env
+# Edit .env with your Mailgun credentials
+
 # Start everything
 ./start.fish
 
