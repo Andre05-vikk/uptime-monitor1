@@ -4,9 +4,15 @@
   "description": "> Purpose: Create a minimal web application to monitor website availability, notify via email if down, and support user login. It must run on a server and execute checks automatically via cron. UI should be kept minimal. No extra features beyond requirements.",
   "main": "index.js",
   "scripts": {
+    "start": "./start.fish",
+    "stop": "./stop.fish", 
+    "dev": "./start.fish",
+    "server": "php -S localhost:8000",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "monitor": "php monitor.php",
+    "check": "php monitor.php"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,23 @@
+[
+    {
+        "url": "https:\/\/httpbin.org\/status\/404",
+        "email": "test2@example.com",
+        "timestamp": "2025-06-10 11:29:29",
+        "error_message": "FAIL: HTTP 404",
+        "status": "active"
+    },
+    {
+        "url": "https:\/\/this-domain-definitely-does-not-exist-12345.com",
+        "email": "test@example.com",
+        "timestamp": "2025-06-10 11:29:30",
+        "error_message": "CONNECTION ERROR: Could not resolve host: this-domain-definitely-does-not-exist-12345.com",
+        "status": "active"
+    },
+    {
+        "url": "https:\/\/httpbin.org\/status\/404",
+        "email": "test@example.com",
+        "timestamp": "2025-06-10 11:29:31",
+        "error_message": "FAIL: HTTP 404",
+        "status": "active"
+    }
+]

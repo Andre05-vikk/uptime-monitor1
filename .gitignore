@@ -9,6 +9,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# Temporary log files
+*.log
+
 # PHP session files
 /tmp/
 
@@ -40,6 +43,13 @@ Thumbs.db
 .env
 .env.local
 .env.production
+
+# PHP Composer dependencies
+vendor/
+composer.lock
+
+# SendGrid and email configuration
+# Never commit your actual API key!
 
 # Temporary files
 *.tmp

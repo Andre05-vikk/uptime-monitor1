@@ -1,29 +1,18 @@
 <?php
 require_once 'config.php';
 
-$error_message = '';
+$message = '';
+$message_type = '';
 
-// Force logout if requested
-if (isset($_GET['force_logout'])) {
-    logout_user();
-    header('Location: index.php');
-    exit();
-}
-
-// Handle login form submission
+// Handle signup form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
     
-    if (empty($username) || empty($password)) {
-        $error_message = 'Please enter both username and password.';
-    } elseif (authenticate_user($username, $password)) {
-        // Successful login - redirect to dashboard
-        header('Location: dashboard.php');
-        exit();
-    } else {
-        $error_message = 'Invalid username or password.';
-    }
+    $result = register_user($username, $password, $confirm_password);
+    $message = $result['message'];
+    $message_type = $result['success'] ? 'success' : 'error';
 }
 
 // If already logged in, redirect to dashboard
@@ -37,16 +26,16 @@ if (is_logged_in()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uptime Monitor - Login</title>
+    <title>Uptime Monitor - Sign Up</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 400px;
-            margin: 100px auto;
+            margin: 50px auto;
             padding: 20px;
             background-color: #f5f5f5;
         }
-        .login-container {
+        .signup-container {
             background: white;
             padding: 30px;
             border-radius: 5px;
@@ -64,6 +53,7 @@ if (is_logged_in()) {
             display: block;
             margin-bottom: 5px;
             color: #555;
+            font-weight: bold;
         }
         input[type="text"], input[type="password"] {
             width: 100%;
@@ -75,7 +65,7 @@ if (is_logged_in()) {
         input[type="submit"] {
             width: 100%;
             padding: 12px;
-            background-color: #007cba;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 3px;
@@ -83,7 +73,7 @@ if (is_logged_in()) {
             font-size: 16px;
         }
         input[type="submit"]:hover {
-            background-color: #005a8b;
+            background-color: #218838;
         }
         .error {
             background-color: #f8d7da;
@@ -93,6 +83,14 @@ if (is_logged_in()) {
             margin-bottom: 20px;
             border: 1px solid #f5c6cb;
         }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
         .info {
             background-color: #d1ecf1;
             color: #0c5460;
@@ -101,47 +99,73 @@ if (is_logged_in()) {
             margin-bottom: 20px;
             border: 1px solid #bee5eb;
         }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .login-link a {
+            color: #007cba;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .requirements {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        .requirements ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>🔐 Uptime Monitor</h1>
+    <div class="signup-container">
+        <h1>📝 Create Account</h1>
         
-        <?php if ($error_message): ?>
-            <div class="error"><?php echo htmlspecialchars($error_message); ?></div>
+        <?php if ($message): ?>
+            <div class="<?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
         <?php endif; ?>
         
         <div class="info">
-            <strong>Default login:</strong><br>
-            Username: admin<br>
-            Password: admin123
+            <strong>Create your monitoring account</strong><br>
+            Monitor your websites and get email alerts when they go down.
         </div>
         
         <form method="POST" action="">
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" 
+                       value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required>
             </div>
             
             <div class="form-group">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
+                <div class="requirements">
+                    <strong>Requirements:</strong>
+                    <ul>
+                        <li>Username: at least 3 characters</li>
+                        <li>Password: at least 6 characters</li>
+                    </ul>
+                </div>
             </div>
             
-            <input type="submit" value="Login">
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            
+            <input type="submit" value="Create Account">
         </form>
         
-        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
-            <p style="color: #666;">Don't have an account?</p>
-            <a href="signup.php" style="color: #007cba; text-decoration: none; font-weight: bold;">Create New Account</a>
+        <div class="login-link">
+            Already have an account? <a href="index.php">Login here</a>
         </div>
-        
-        <?php if (is_logged_in()): ?>
-        <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-            <p style="color: #999; font-size: 12px;">Already logged in as <?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?></p>
-            <a href="?force_logout=1" style="color: #dc3545; text-decoration: none; font-size: 12px;">Force New Login</a>
-        </div>
-        <?php endif; ?>
     </div>
 </body>
 </html>

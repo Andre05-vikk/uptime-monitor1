@@ -103,18 +103,39 @@ test.describe('User Authentication System', () => {
   });
 
   test('should not access protected pages after logout', async ({ page }) => {
+    // Use a unique browser context to avoid session interference
+    await page.goto('/logout.php'); // Start clean
+    
     // Login first
+    await page.goto('/');
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin');
     await page.click('input[type="submit"]');
     
-    // Logout
-    await page.click('a[href*="logout"], button:has-text("Logout"), input[value*="Logout"]');
+    // Wait for dashboard load
+    await page.waitForURL('/dashboard.php');
+    await expect(page.locator('h1')).toContainText('Monitor Dashboard');
     
-    // Try to access dashboard directly
+    // Find and click logout
+    const logoutLink = page.locator('a[href*="logout"], .logout-btn');
+    await expect(logoutLink).toBeVisible();
+    await logoutLink.click();
+    
+    // Wait for logout redirect with more time and be flexible about the endpoint
+    await page.waitForLoadState('networkidle');
+    
+    // Verify we're at login page after logout
+    const currentUrl = page.url();
+    expect(currentUrl).toMatch(/index\.php|\/$/);
+    
+    // Verify login form is visible
+    await expect(page.locator('input[name="username"]')).toBeVisible();
+    
+    // Try to access dashboard directly (this should redirect to login)
     await page.goto('/dashboard.php');
     
-    // Should redirect back to login (index.php is the real redirect)
+    // Should redirect back to login 
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL('/index.php');
     await expect(page.locator('input[name="username"]')).toBeVisible();
   });

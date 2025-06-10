@@ -17,9 +17,10 @@ if ($_POST && isset($_POST['url'], $_POST['email'])) {
     $message_type = $result['success'] ? 'success' : 'error';
 }
 
-// Get current username and monitors
+// Get current username and monitors with live status
 $username = $_SESSION['username'] ?? '';
-$monitors = get_monitors();
+$monitors = get_monitors_with_status();
+$alerts = get_alerts();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -136,7 +137,88 @@ $monitors = get_monitors();
             border-radius: 3px;
             margin-bottom: 10px;
             background-color: #f8f9fa;
+            border-left: 4px solid #ddd;
         }
+        .monitor-item.up {
+            border-left-color: #28a745;
+        }
+        .monitor-item.down {
+            border-left-color: #dc3545;
+        }
+        .monitor-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-up {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .monitor-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .response-time {
+            font-weight: bold;
+        }
+        .alert-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .refresh-btn {
+            background: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .refresh-btn:hover {
+            background: #138496;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-up { color: #28a745; }
+        .stat-down { color: #dc3545; }
+        .stat-total { color: #007bff; }
         .monitor-url {
             font-weight: bold;
             color: #007bff;
@@ -185,13 +267,72 @@ $monitors = get_monitors();
     </div>
     
     <?php if (!empty($monitors)): ?>
+    <?php 
+    // Calculate stats
+    $total_monitors = count($monitors);
+    $up_count = 0;
+    $down_count = 0;
+    foreach ($monitors as $monitor) {
+        if ($monitor['live_status'] === 'up') {
+            $up_count++;
+        } else {
+            $down_count++;
+        }
+    }
+    ?>
+    
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number stat-total"><?php echo $total_monitors; ?></div>
+            <div>Total Monitors</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number stat-up"><?php echo $up_count; ?></div>
+            <div>Online</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number stat-down"><?php echo $down_count; ?></div>
+            <div>Offline</div>
+        </div>
+        <div class="stat-card">
+            <a href="?" class="refresh-btn">🔄 Refresh Status</a>
+        </div>
+    </div>
+    
     <div class="monitors-list">
         <h2>📋 Current Monitors</h2>
         <?php foreach ($monitors as $monitor): ?>
-            <div class="monitor-item">
-                <div class="monitor-url"><?php echo htmlspecialchars($monitor['url']); ?></div>
-                <div class="monitor-email">📧 <?php echo htmlspecialchars($monitor['email']); ?></div>
-                <div class="monitor-date">Added: <?php echo htmlspecialchars($monitor['added_at']); ?></div>
+            <div class="monitor-item <?php echo $monitor['live_status']; ?>">
+                <div class="monitor-status">
+                    <div class="monitor-url"><?php echo htmlspecialchars($monitor['url']); ?></div>
+                    <span class="status-badge status-<?php echo $monitor['live_status']; ?>">
+                        <?php echo $monitor['live_status'] === 'up' ? '🟢 UP' : '🔴 DOWN'; ?>
+                    </span>
+                </div>
+                
+                <div class="monitor-details">
+                    <div>📧 <?php echo htmlspecialchars($monitor['email']); ?></div>
+                    <div class="response-time">⚡ <?php echo $monitor['response_time']; ?>ms</div>
+                    <div>📅 Added: <?php echo htmlspecialchars($monitor['added_at']); ?></div>
+                    <?php if (isset($monitor['http_code'])): ?>
+                    <div>📊 HTTP <?php echo $monitor['http_code']; ?></div>
+                    <?php endif; ?>
+                    <div>🕐 Last check: <?php echo $monitor['last_checked']; ?></div>
+                    <div></div>
+                </div>
+                
+                <?php if (!empty($monitor['recent_alerts'])): ?>
+                <div style="margin-top: 10px;">
+                    <strong>⚠️ Recent Alerts:</strong>
+                    <?php foreach (array_reverse($monitor['recent_alerts']) as $alert): ?>
+                        <div class="alert-item">
+                            <?php echo date('M d H:i', strtotime($alert['timestamp'])); ?> - 
+                            <?php echo htmlspecialchars($alert['error_message']); ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
     </div>
