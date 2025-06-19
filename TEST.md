@@ -103,12 +103,12 @@ npx playwright show-report
 - ✅ One alert per incident (no duplicates)
 - ✅ Alert tracking and history
 - ✅ Alert status management
-- ✅ Mailgun integration setup
+- ✅ Brevo integration setup
 - ✅ Email template validation
 - ✅ Error message formatting
 
 **Key Features Tested**:
-- Mailgun API integration
+- Brevo API integration
 - Alert deduplication
 - Email content validation
 - Alert persistence

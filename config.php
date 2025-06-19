@@ -1,6 +1,9 @@
 <?php
 // Basic configuration for uptime monitor application
 
+// Set timezone to Europe/Tallinn (EET/EEST)
+date_default_timezone_set('Europe/Tallinn');
+
 // Load environment variables from .env file
 function loadEnv($filePath) {
     if (!file_exists($filePath)) {
@@ -29,7 +32,9 @@ function loadEnv($filePath) {
 loadEnv(__DIR__ . '/.env');
 
 // Start session for authentication
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Clear any existing login session if 'fresh' parameter is present
 if (isset($_GET['fresh']) && $_GET['fresh'] === '1') {
@@ -38,11 +43,12 @@ if (isset($_GET['fresh']) && $_GET['fresh'] === '1') {
     exit();
 }
 
-// Mailgun configuration (now using .env file)
-define('MAILGUN_API_KEY', getenv('MAILGUN_API_KEY') ?: 'your-mailgun-api-key-here');
-define('MAILGUN_DOMAIN', getenv('MAILGUN_DOMAIN') ?: 'your-mailgun-domain.com');
-define('FROM_EMAIL', 'noreply@' . MAILGUN_DOMAIN);
-define('FROM_NAME', getenv('FROM_NAME') ?: 'Uptime Monitor');
+// Brevo (formerly SendinBlue) configuration (now using .env file)
+define('BREVO_API_KEY', getenv('BREVO_API_KEY') ?: 'your-brevo-api-key-here');
+define('BREVO_FROM_EMAIL', getenv('BREVO_FROM_EMAIL') ?: 'noreply@yourdomain.com');
+define('BREVO_FROM_NAME', getenv('BREVO_FROM_NAME') ?: getenv('FROM_NAME') ?: 'Uptime Monitor');
+define('FROM_EMAIL', BREVO_FROM_EMAIL);
+define('FROM_NAME', BREVO_FROM_NAME);
 
 // Simple file-based user storage (as per requirements)
 define('USERS_FILE', __DIR__ . '/users.json');
@@ -80,6 +86,16 @@ function authenticate_user($username, $password) {
 // Function to check if user is logged in
 function is_logged_in() {
     return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+}
+
+// Function to check if current user is admin
+function is_admin() {
+    return isset($_SESSION['username']) && $_SESSION['username'] === 'admin';
+}
+
+// Function to get current username
+function get_current_username() {
+    return $_SESSION['username'] ?? '';
 }
 
 // Function to logout user
@@ -152,8 +168,39 @@ function require_login() {
     }
 }
 
-// Function to get all monitors
+// Function to get all monitors for current user (or all monitors if admin)
 function get_monitors() {
+    if (!file_exists(MONITORS_FILE)) {
+        return [];
+    }
+    
+    $content = file_get_contents(MONITORS_FILE);
+    $all_monitors = json_decode($content, true) ?: [];
+    
+    // Admin sees all monitors
+    if (is_admin()) {
+        return $all_monitors;
+    }
+    
+    // Filter monitors for current user only
+    $current_username = get_current_username();
+    if (empty($current_username)) {
+        return [];
+    }
+    
+    $user_monitors = [];
+    foreach ($all_monitors as $monitor) {
+        // Show monitors that belong to current user
+        if (isset($monitor['username']) && $monitor['username'] === $current_username) {
+            $user_monitors[] = $monitor;
+        }
+    }
+    
+    return $user_monitors;
+}
+
+// Function to get all monitors (admin function, not filtered by user)
+function get_all_monitors() {
     if (!file_exists(MONITORS_FILE)) {
         return [];
     }
@@ -183,6 +230,29 @@ function validate_email($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 }
 
+function validate_multiple_emails($email_string) {
+    // Split by comma or semicolon, trim whitespace
+    $emails = preg_split('/[,;]/', $email_string);
+    
+    if (empty($emails)) {
+        return false;
+    }
+    
+    $valid_count = 0;
+    foreach ($emails as $email) {
+        $email = trim($email);
+        if (!empty($email)) {
+            if (!validate_email($email)) {
+                return false;
+            }
+            $valid_count++;
+        }
+    }
+    
+    // Must have at least one valid email
+    return $valid_count > 0;
+}
+
 // Function to add new monitor
 function add_monitor($url, $email) {
     // Validate input
@@ -190,35 +260,138 @@ function add_monitor($url, $email) {
         return ['success' => false, 'message' => 'Invalid URL format. Please use http:// or https://'];
     }
     
-    if (!validate_email($email)) {
-        return ['success' => false, 'message' => 'Invalid email format.'];
+    if (!validate_multiple_emails($email)) {
+        return ['success' => false, 'message' => 'Invalid email format. Please enter valid email addresses separated by commas or semicolons.'];
     }
     
-    // Get existing monitors
-    $monitors = get_monitors();
+    // Get current username
+    $current_username = $_SESSION['username'] ?? '';
+    if (empty($current_username)) {
+        return ['success' => false, 'message' => 'User session invalid. Please login again.'];
+    }
     
-    // Check for duplicates
-    foreach ($monitors as $monitor) {
+    // Get user's existing monitors for duplicate check
+    $user_monitors = get_monitors();
+    
+    // Check for duplicates within user's monitors
+    foreach ($user_monitors as $monitor) {
         if ($monitor['url'] === $url && $monitor['email'] === $email) {
-            return ['success' => false, 'message' => 'This URL and email combination already exists.'];
+            return ['success' => false, 'message' => 'This URL and email combination already exists in your monitors.'];
         }
     }
     
-    // Add new monitor
+    // Get all monitors to append new one
+    $all_monitors = get_all_monitors();
+    
+    // Add new monitor with username
     $new_monitor = [
         'url' => $url,
         'email' => $email,
+        'username' => $current_username,
         'added_at' => date('Y-m-d H:i:s'),
         'status' => 'active'
     ];
     
-    $monitors[] = $new_monitor;
+    $all_monitors[] = $new_monitor;
     
     // Save to file
-    if (save_monitors($monitors)) {
+    if (save_monitors($all_monitors)) {
         return ['success' => true, 'message' => 'Monitor added successfully!'];
     } else {
         return ['success' => false, 'message' => 'Failed to save monitor. Please check file permissions.'];
+    }
+}
+
+// Function to delete monitor
+function delete_monitor($index) {
+    $user_monitors = get_monitors();
+    
+    if (!isset($user_monitors[$index])) {
+        return ['success' => false, 'message' => 'Monitor not found.'];
+    }
+    
+    $monitor_to_delete = $user_monitors[$index];
+    $all_monitors = get_all_monitors();
+    $updated_all_monitors = [];
+    
+    // Remove the specified monitor from all monitors
+    foreach ($all_monitors as $monitor) {
+        if (!($monitor['url'] === $monitor_to_delete['url'] && 
+              $monitor['email'] === $monitor_to_delete['email'] && 
+              ($monitor['username'] ?? '') === ($monitor_to_delete['username'] ?? ''))) {
+            $updated_all_monitors[] = $monitor;
+        }
+    }
+    
+    // Save updated monitors
+    if (save_monitors($updated_all_monitors)) {
+        return ['success' => true, 'message' => 'Monitor deleted successfully!'];
+    } else {
+        return ['success' => false, 'message' => 'Failed to delete monitor. Please check file permissions.'];
+    }
+}
+
+// Function to get single monitor by index
+function get_monitor($index) {
+    $monitors = get_monitors();
+    
+    if (!isset($monitors[$index])) {
+        return null;
+    }
+    
+    return $monitors[$index];
+}
+
+// Function to update monitor
+function update_monitor($index, $url, $email) {
+    // Validate input
+    if (!validate_url($url)) {
+        return ['success' => false, 'message' => 'Invalid URL format. Please use http:// or https://'];
+    }
+    
+    if (!validate_multiple_emails($email)) {
+        return ['success' => false, 'message' => 'Invalid email format. Please enter valid email addresses separated by commas or semicolons.'];
+    }
+    
+    $user_monitors = get_monitors();
+    
+    if (!isset($user_monitors[$index])) {
+        return ['success' => false, 'message' => 'Monitor not found.'];
+    }
+    
+    // Check for duplicates within user's monitors (exclude current monitor)
+    foreach ($user_monitors as $i => $monitor) {
+        if ($i !== $index && $monitor['url'] === $url && $monitor['email'] === $email) {
+            return ['success' => false, 'message' => 'This URL and email combination already exists in your monitors.'];
+        }
+    }
+    
+    // Find and update the monitor in all_monitors
+    $monitor_to_update = $user_monitors[$index];
+    $all_monitors = get_all_monitors();
+    $updated = false;
+    
+    foreach ($all_monitors as &$monitor) {
+        if ($monitor['url'] === $monitor_to_update['url'] && 
+            $monitor['email'] === $monitor_to_update['email'] && 
+            ($monitor['username'] ?? '') === ($monitor_to_update['username'] ?? '')) {
+            $monitor['url'] = $url;
+            $monitor['email'] = $email;
+            $monitor['updated_at'] = date('Y-m-d H:i:s');
+            $updated = true;
+            break;
+        }
+    }
+    
+    if (!$updated) {
+        return ['success' => false, 'message' => 'Monitor not found for update.'];
+    }
+    
+    // Save to file
+    if (save_monitors($all_monitors)) {
+        return ['success' => true, 'message' => 'Monitor updated successfully!'];
+    } else {
+        return ['success' => false, 'message' => 'Failed to update monitor. Please check file permissions.'];
     }
 }
 
@@ -262,13 +435,16 @@ function get_monitors_with_status() {
     $monitors = get_monitors();
     $alerts = get_alerts();
     
-    // Create alerts lookup by URL for quick access
+    // Create alerts lookup by URL for quick access (only active alerts)
     $alerts_by_url = [];
     foreach ($alerts as $alert) {
-        if (!isset($alerts_by_url[$alert['url']])) {
-            $alerts_by_url[$alert['url']] = [];
+        // Only include active alerts (not resolved)
+        if (!isset($alert['status']) || $alert['status'] === 'active') {
+            if (!isset($alerts_by_url[$alert['url']])) {
+                $alerts_by_url[$alert['url']] = [];
+            }
+            $alerts_by_url[$alert['url']][] = $alert;
         }
-        $alerts_by_url[$alert['url']][] = $alert;
     }
     
     foreach ($monitors as &$monitor) {
@@ -286,5 +462,95 @@ function get_monitors_with_status() {
     }
     
     return $monitors;
+}
+
+// Admin-only functions for user management
+
+// Function to get all users (admin only)
+function get_all_users() {
+    if (!is_admin()) {
+        return [];
+    }
+    
+    if (!file_exists(USERS_FILE)) {
+        return [];
+    }
+    
+    $users = json_decode(file_get_contents(USERS_FILE), true) ?: [];
+    
+    // Return usernames only, not passwords
+    return array_keys($users);
+}
+
+// Function to delete user (admin only)
+function delete_user($username) {
+    if (!is_admin()) {
+        return ['success' => false, 'message' => 'Access denied. Admin privileges required.'];
+    }
+    
+    if ($username === 'admin') {
+        return ['success' => false, 'message' => 'Cannot delete admin user.'];
+    }
+    
+    if (!file_exists(USERS_FILE)) {
+        return ['success' => false, 'message' => 'Users file not found.'];
+    }
+    
+    $users = json_decode(file_get_contents(USERS_FILE), true) ?: [];
+    
+    if (!isset($users[$username])) {
+        return ['success' => false, 'message' => 'User not found.'];
+    }
+    
+    unset($users[$username]);
+    
+    // Also delete all monitors belonging to this user
+    $all_monitors = get_all_monitors();
+    $updated_monitors = [];
+    
+    foreach ($all_monitors as $monitor) {
+        if (($monitor['username'] ?? '') !== $username) {
+            $updated_monitors[] = $monitor;
+        }
+    }
+    
+    // Save updated files
+    $users_saved = file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
+    $monitors_saved = save_monitors($updated_monitors);
+    
+    if ($users_saved && $monitors_saved) {
+        return ['success' => true, 'message' => "User '$username' and all their monitors deleted successfully."];
+    } else {
+        return ['success' => false, 'message' => 'Failed to delete user or their monitors.'];
+    }
+}
+
+// Function to change user password (admin only)
+function change_user_password($username, $new_password) {
+    if (!is_admin()) {
+        return ['success' => false, 'message' => 'Access denied. Admin privileges required.'];
+    }
+    
+    if (strlen($new_password) < 6) {
+        return ['success' => false, 'message' => 'Password must be at least 6 characters long.'];
+    }
+    
+    if (!file_exists(USERS_FILE)) {
+        return ['success' => false, 'message' => 'Users file not found.'];
+    }
+    
+    $users = json_decode(file_get_contents(USERS_FILE), true) ?: [];
+    
+    if (!isset($users[$username])) {
+        return ['success' => false, 'message' => 'User not found.'];
+    }
+    
+    $users[$username] = password_hash($new_password, PASSWORD_DEFAULT);
+    
+    if (file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT))) {
+        return ['success' => true, 'message' => "Password for user '$username' updated successfully."];
+    } else {
+        return ['success' => false, 'message' => 'Failed to update password.'];
+    }
 }
 ?>

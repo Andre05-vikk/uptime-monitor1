@@ -3,77 +3,68 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+
+# Composer dependencies
+vendor/
+composer.lock
 
 # Environment variables (contains sensitive data)
 .env
 .env.local
 .env.production
 
+# Runtime data files (contain sensitive user/monitoring data)
+monitors.json
+users.json
+alerts.json
+monitor_status.json
+
+# Temporary files and state
+.last_cleanup
+.last_summary
+.DS_Store
+*.tmp
+
+# Log files (generated automatically)
+*.log
+auto-monitor.log
+monitor.log
+server.log
+
 # Playwright test results and reports
 test-results/
 playwright-report/
 playwright/.cache/
 
-# Temporary log files
-*.log
-
-# PHP session files
-/tmp/
-
-# User data and credentials
-users.json
-
-# Monitor data storage
-monitors.json
-
-# Alert history (may contain sensitive emails)
-alerts.json
-
-# Temporary test files
-*test*.php
-send_*.php
+# Test and debug files (development only)
+test_*.php
 debug_*.php
-check_*.php
-quick_*.php
+*_test.php
+*_debug.php
+debug.log
 
-# Log files and monitoring data
-logs/
-*.log
-server.log
-monitor.log
+# Personal documentation and guides (keep only README.md public)
+ANTI_SPAM_GUIDE.md
+BREVO_SETUP.md
+BREVO_TRACKING_PIXEL_ISSUE.md
+DATA_CLEANUP_GUIDE.md
+HETZNER_DEPLOYMENT.md
+TEST.md
+EMAIL_DELIVERABILITY_FINAL_REPORT.md
 
-# Sensitive configuration backups
-config.php.bak
-.env.backup
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Editor files
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Environment files
-.env
-.env.local
-.env.production
+# OS generated files
+Thumbs.db
 
-# PHP Composer dependencies
-vendor/
-composer.lock
-
-# SendGrid and email configuration
-# Never commit your actual API key!
-
-# Temporary files
-*.tmp
-*.temp
+# PM2 process manager files (server-side only)
+ecosystem.config.js
+pm2.config.js
+.pm2/
+pids/
+logs/

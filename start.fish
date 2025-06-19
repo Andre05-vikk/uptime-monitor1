@@ -13,7 +13,7 @@ if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1
 end
 
 # Get current directory
-set SCRIPT_DIR (dirname (status --current-filename))
+set SCRIPT_DIR (dirname (realpath (status --current-filename)))
 cd $SCRIPT_DIR
 
 # Clear any existing PHP sessions
@@ -39,8 +39,16 @@ if not lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1
 end
 
 echo "✅ PHP server started successfully (PID: $SERVER_PID)"
+
+# Start automatic monitoring in background
+echo "🔄 Starting automatic monitoring (30-second intervals)..."
+fish auto-monitor.fish > auto-monitor.log 2>&1 &
+set MONITOR_PID $last_pid
+
+echo "✅ Automatic monitoring started (PID: $MONITOR_PID)"
 echo "📊 Server running at: http://localhost:8000"
 echo "📝 Server logs: server.log"
+echo "📈 Monitor logs: auto-monitor.log"
 
 # Open browser (works on macOS)
 if command -v open >/dev/null 2>&1
@@ -55,23 +63,25 @@ echo "📋 Default login credentials:"
 echo "   Username: admin"
 echo "   Password: admin123"
 echo ""
-echo "⏹️  To stop the server, run: ./stop.fish"
-echo "   Or press Ctrl+C if running in foreground"
+echo "🔄 System running with automatic monitoring every 30 seconds"
+echo "⏹️  To stop everything, run: ./stop.fish"
+echo "   Or press Ctrl+C"
 
 # Keep script running to show logs
-echo "📊 Server is running. Press Ctrl+C to stop..."
-echo "📄 Server logs:"
+echo "📊 System is running. Press Ctrl+C to stop..."
+echo "📄 Recent activity:"
 echo "----------------------------------------"
 
 # Set up trap for Ctrl+C
 function cleanup
     echo ""
-    echo "🛑 Stopping server..."
+    echo "🛑 Stopping all processes..."
     kill $SERVER_PID 2>/dev/null; or true
+    kill $MONITOR_PID 2>/dev/null; or true
     exit 0
 end
 
 trap cleanup INT
 
-# Follow server logs
-tail -f server.log
+# Show combined logs (server + monitoring)
+tail -f server.log auto-monitor.log

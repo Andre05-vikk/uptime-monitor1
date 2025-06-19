@@ -1,84 +1,115 @@
-# 🔍 Uptime Monitor - Web Monitoring Application
+# 🔍 Uptime Monitor - Automated Web Monitoring System
 
-> **Purpose**: Minimal web application to monitor website availability, send email notifications when sites are down, and support user authentication. Designed to run on a server with automated cron checks.
+> **Purpose**: Automated web monitoring application that continuously monitors website availability and sends email notifications when sites go down/up. Includes user authentication and real-time dashboard.
+
+> **🚀 Quick Start**: One command to start everything - web interface + automatic monitoring!
 
 ---
 
 ## 🚀 Quick Start
 
-### One-Command Launch
+### 🔧 First Time Setup
 
-```fish
-# Fish Shell (recommended)
+**1. Clone and Setup:**
+```bash
+git clone <repository-url>
+cd uptime-monitor1
+./setup.sh  # Creates necessary data files
+```
+
+**2. Configure Environment:**
+```bash
+# Edit .env file with your Brevo API key
+nano .env  # or your preferred editor
+```
+
+### ⚡ Automatic System (Recommended)
+
+**Start Complete System (Web + Monitoring):**
+```bash
+# Fish Shell (automatic web server + monitoring)
 ./start.fish
 
-# Bash Shell
-./start.sh
-
-# NPM Scripts
-npm start
-npm run dev
+# Access dashboard: http://localhost:8000
+# Login: admin / admin123
+# Monitoring runs automatically every 30 seconds
 ```
 
-### Manual Launch
-
-```fish
-php -S localhost:8000
-open http://localhost:8000
+**Stop Everything:**
+```bash
+./stop.fish
+# Or press Ctrl+C in terminal
 ```
 
-### Login Credentials
+### 🎯 What You Get:
 
+- **🌐 Web Dashboard**: http://localhost:8000 (auto-refreshes every 30s)
+- **� Automatic Monitoring**: Checks every 30 seconds automatically  
+- **📧 Email Alerts**: Sent only on status changes (UP ↔ DOWN)
+- **📊 Real-time Logs**: See monitoring activity in terminal
+- **🕐 Estonian Time**: All timestamps in Europe/Tallinn timezone
+
+### 📋 Default Login:
 - **Username**: `admin`
 - **Password**: `admin123`
 
 ---
 
-## 📋 Features
 
-✅ **User Authentication System**
-- Secure login/logout with PHP sessions
-- User registration with validation
-- Session management and protection
 
-✅ **Website Monitoring**
-- Add/manage monitored URLs
-- Real-time status checking
-- HTTP response time tracking
-- Visual status indicators (🟢 UP / 🔴 DOWN)
 
-✅ **Email Notifications**
-- Automatic alerts when sites go down
-- Mailgun integration for reliable delivery
-- One alert per incident (no spam)
-- Detailed error messages with timestamps
 
-✅ **Automated Monitoring**
-- Cron-compatible PHP script (`monitor.php`)
-- Configurable check intervals
-- Comprehensive logging
-- Alert tracking and history
-
-✅ **Dashboard Interface**
-- Real-time monitoring status
-- Statistics overview (Total/Online/Offline)
-- Response time metrics
-- Recent alerts history
-- Manual refresh capability
-
----
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
 
 - PHP 8.0+ with cURL extension
-- Composer (for dependencies)
-- Web server or PHP built-in server
+- Composer (for dependencies)  
+- Fish shell (or Bash as fallback)
 
 ### Quick Setup
 
-1. **Clone/Download** this repository
+1. **Clone Repository**
+```bash
+git clone <repository-url>
+cd uptime-monitor1
+```
+
+2. **Install Dependencies**
+```bash
+composer install
+```
+
+3. **Configure Email (Optional)**
+```bash
+# Copy example configuration
+cp .env.example .env
+
+# Edit .env with your Brevo settings
+nano .env
+```
+
+4. **Start System**
+```bash
+./start.fish
+```
+
+5. **Access Dashboard**
+- Open: http://localhost:8000
+- Login: admin / admin123
+- Add your websites to monitor
+
+### 🔧 Configuration
+
+**Email Setup (Brevo):**
+- Get free API key from [Brevo.com](https://brevo.com)
+- Update `.env` file with your credentials
+- See [BREVO_SETUP.md](BREVO_SETUP.md) for detailed setup
+
+**Without Email:**
+- System works without email configuration
+- Monitoring still functions, just no notifications sent
 2. **Configure environment**:
    ```fish
    cp .env.example .env
@@ -98,47 +129,52 @@ open http://localhost:8000
 
 ## 🎯 Usage Guide
 
-### 1. Starting the Application
+### 1. Starting the System
 
-**Automated start (recommended)**:
-```fish
+```bash
 ./start.fish
 ```
-This will:
-- Check and kill any existing processes on port 8000
-- Start PHP development server
-- Open browser automatically
-- Show real-time server logs
-- Display login credentials
 
-**Manual start**:
-```fish
-php -S localhost:8000
+**What happens:**
+- ✅ Starts web server on http://localhost:8000
+- ✅ Starts automatic monitoring (30-second intervals)
+- ✅ Opens browser automatically
+- ✅ Shows real-time logs in terminal
+
+### 2. Stopping the System
+
+```bash
+./stop.fish
+# Or press Ctrl+C in the terminal
 ```
 
-### 2. Logging In
+### 3. Using the Dashboard
 
-Navigate to `http://localhost:8000` and use:
-- Username: `admin`
-- Password: `admin123`
+1. **Login**: http://localhost:8000
+   - Username: `admin`
+   - Password: `admin123`
 
-### 3. Adding Monitors
+2. **Add Website to Monitor**:
+   - Enter URL (e.g., `https://example.com`)
+   - Enter your email address
+   - Click "Add Monitor"
 
-1. Log into the dashboard
-2. Enter website URL (e.g., `https://google.com`)
-3. Enter notification email
-4. Click "Add Monitor"
+3. **Monitor Status**:
+   - **🟢 GREEN**: Website is UP and responding
+   - **🔴 RED**: Website is DOWN or not responding
+   - **Auto-refresh**: Dashboard updates every 30 seconds
 
-### 4. Viewing Status
+### 4. Email Notifications
 
-The dashboard shows:
-- **Statistics**: Total monitors, online/offline counts
-- **Live Status**: Real-time UP/DOWN indicators
-- **Response Times**: Performance metrics in milliseconds
-- **HTTP Codes**: Status codes (200, 404, etc.)
-- **Recent Alerts**: Last 3 alerts per monitor
+**When you receive emails:**
+- ❌ **DOWN alert**: When website goes offline
+- ✅ **UP alert**: When website comes back online
 
-### 5. Manual Monitoring Check
+**Email features:**
+- Professional templates with HTML/text versions
+- Estonian timezone (EET/EEST)
+- Anti-spam optimized headers
+- Delivered via Brevo (SendinBlue)
 
 ```fish
 # Run monitoring script manually
@@ -171,33 +207,34 @@ npm stop
 2. **Edit .env file** with your credentials:
    ```bash
    # Required for email notifications
-   MAILGUN_API_KEY=your-actual-mailgun-api-key
-   MAILGUN_DOMAIN=your-actual-domain.com
+   BREVO_API_KEY=your-actual-brevo-api-key
+   BREVO_FROM_EMAIL=noreply@yourdomain.com
+   BREVO_FROM_NAME="Your Monitor Name"
    
    # Optional customizations
-   FROM_NAME="Your Monitor Name"
    ADMIN_EMAIL=your-admin@email.com
    MONITOR_TIMEOUT=10
    ```
 
-### Email Setup (Mailgun)
+### Email Setup (Brevo)
 
-1. **Get Mailgun credentials**:
-   - API Key: https://app.mailgun.com/app/account/security/api_keys
-   - Domain: https://app.mailgun.com/app/domains
+1. **Get Brevo credentials**:
+   - API Key: https://app.brevo.com/settings/keys/api
+   - Verified sender email: https://app.brevo.com/senders/domain/new
 
 2. **Add to .env file**:
    ```bash
-   MAILGUN_API_KEY=key-1234567890abcdef1234567890abcdef
-   MAILGUN_DOMAIN=mg.yourdomain.com
+   BREVO_API_KEY=xkeysib-your-api-key-here
+   BREVO_FROM_EMAIL=noreply@yourdomain.com
+   BREVO_FROM_NAME="Uptime Monitor"
    ```
 
 ### Alternative: Environment Variables
 
 You can also set environment variables directly:
 ```fish
-export MAILGUN_API_KEY="your-api-key"
-export MAILGUN_DOMAIN="your-domain.com"
+export BREVO_API_KEY="your-api-key"
+export BREVO_FROM_EMAIL="noreply@yourdomain.com"
 ```
 
 ### Automated Monitoring (Cron)
@@ -267,90 +304,6 @@ npm run test:headed # Run tests with visible browser
 npm run test:ui    # Interactive test UI
 ```
 
-### Project Structure
-
-```
-/uptime-monitor/
-├── Core PHP Files
-│   ├── index.php (Login)
-│   ├── dashboard.php (Main UI)
-│   ├── config.php (Functions)
-│   └── monitor.php (Cron script)
-├── Data Storage
-│   ├── users.json
-│   ├── monitors.json
-│   └── alerts.json
-├── Scripts
-│   ├── start.fish/sh
-│   └── stop.fish/sh
-└── Tests
-    └── tests/*.spec.js
-```
-
----
-
-## 🛡️ Security Features
-
-- **Session Management**: Secure PHP sessions with proper cleanup
-- **Password Hashing**: PHP `password_hash()` for secure storage
-- **Input Validation**: URL and email format validation
-- **CSRF Protection**: Form validation and authentication checks
-- **Session Timeout**: Automatic logout handling
-
----
-
-## 📊 Monitoring Features
-
-### Real-time Status Checking
-- HTTP response codes
-- Connection timeouts (10-second limit)
-- SSL certificate validation
-- Response time measurement
-- Error message capture
-
-### Alert System
-- **Smart Notifications**: One email per incident
-- **Alert Tracking**: Prevent duplicate notifications
-- **Detailed Messages**: URL, timestamp, error details
-- **Alert History**: Dashboard shows recent alerts
-
-### Performance Metrics
-- Response time in milliseconds
-- HTTP status codes
-- Success/failure rates
-- Uptime statistics
-
----
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-**1. Can't login with admin/admin123**
-```fish
-# Reset user credentials
-./stop.fish
-rm users.json
-./start.fish
-```
-
-**2. Server won't start (port in use)**
-```fish
-# Kill processes on port 8000
-lsof -ti:8000 | xargs kill -9
-./start.fish
-```
-
-**3. Email notifications not working**
-- Check if `.env` file exists: `ls -la .env`
-- Verify Mailgun credentials in `.env` file
-- Get API key from: https://app.mailgun.com/app/account/security/api_keys
-- Test with `php monitor.php` and check logs
-
-**4. Monitors not updating**
-- Check `monitor.log` for errors
-- Verify URL format (include http/https)
-- Run manual check: `php monitor.php`
 
 ### Log Files
 - `server.log` - PHP server logs
@@ -369,42 +322,56 @@ lsof -ti:8000 | xargs kill -9
 
 ---
 
-## 🎉 Quick Commands Reference
+## 📋 Quick Reference
 
-```fish
-# Initial setup
-cp .env.example .env
-# Edit .env with your Mailgun credentials
+### Essential Commands
 
-# Start everything
+```bash
+# Start complete system (web + monitoring)
 ./start.fish
 
-# Stop everything  
+# Stop everything
 ./stop.fish
 
-# Check monitors manually
+# Manual monitoring check (optional)
 php monitor.php
-
-# Run tests
-npm test
-
-# Reset application
-./stop.fish && rm users.json monitors.json alerts.json && ./start.fish
 ```
+
+### URLs & Login
+
+- **Dashboard**: http://localhost:8000
+- **Username**: `admin`
+- **Password**: `admin123`
+
+### Log Files
+
+- **Auto-monitor**: `auto-monitor.log` - Monitoring activity
+- **Web server**: `server.log` - Web server access logs
+- **Monitor**: `monitor.log` - Detailed monitoring logs
+
+### Configuration Files
+
+- **`.env`** - Email API keys and settings
+- **`monitors.json`** - List of monitored websites
+- **`monitor_status.json`** - Current status cache
+- **`alerts.json`** - Alert history
+
+### Email Status
+
+- ✅ **Emails working**: Check `.env` for Brevo API key
+- ❌ **No emails**: System still monitors, just no notifications
+- 📧 **Test email**: `php test_brevo.php`
 
 ---
 
-## 📞 Support
+## � Additional Documentation
 
-This is a minimal monitoring application designed for simplicity and reliability. 
+- **[📧 Anti-Spam Email Guide](ANTI_SPAM_GUIDE.md)** - Detailed guide to prevent emails from going to spam
+- **[🔧 Brevo Setup Guide](BREVO_SETUP.md)** - Email service configuration
+- **[⚡ Auto-Monitor Guide](AUTO_MONITOR_GUIDE.md)** - Automated monitoring setup
+- **[🧹 Data Cleanup Guide](DATA_CLEANUP_GUIDE.md)** - Data management and cleanup
+- **[🕐 Timezone Guide](TIMEZONE_FIXED.md)** - Estonian timezone configuration
 
-**Key Features**:
-- ✅ Real-time website monitoring
-- ✅ Email notifications via Mailgun
-- ✅ User authentication system
-- ✅ Visual dashboard interface
-- ✅ Automated cron monitoring
-- ✅ Comprehensive test coverage
 
 **Login**: `admin` / `admin123`  
 **URL**: `http://localhost:8000`

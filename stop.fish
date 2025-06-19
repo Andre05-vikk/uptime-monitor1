@@ -1,9 +1,9 @@
 #!/opt/homebrew/bin/fish
 
 # Uptime Monitor - Stop Script (Fish Shell)
-# Peatab PHP serveri
+# Peatab PHP serveri ja automaatse monitoring
 
-echo "🛑 Stopping Uptime Monitor server..."
+echo "🛑 Stopping Uptime Monitor system..."
 
 # Kill all processes using port 8000
 if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1
@@ -21,10 +21,22 @@ else
     echo "ℹ️  No server running on port 8000"
 end
 
+# Stop monitoring processes
+echo "🔧 Stopping automatic monitoring..."
+pkill -f "auto-monitor.fish" 2>/dev/null; or true
+pkill -f "monitor.php" 2>/dev/null; or true
+sleep 1
+echo "✅ Monitoring stopped"
+
 # Clean up log files if they exist
 if test -f "server.log"
     echo "🧹 Cleaning up server.log"
     rm -f server.log
 end
 
-echo "🏁 Done!"
+if test -f "auto-monitor.log"
+    echo "🧹 Cleaning up auto-monitor.log"
+    rm -f auto-monitor.log
+end
+
+echo "🏁 System stopped completely!"

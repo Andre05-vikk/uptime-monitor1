@@ -1,8 +1,7 @@
 {
     "require": {
-        "mailgun/mailgun-php": "^4.3",
-        "nyholm/psr7": "^1.8",
-        "php-http/guzzle7-adapter": "^1.1"
+        "getbrevo/brevo-php": "^1.0",
+        "guzzlehttp/guzzle": "^7.0"
     },
     "config": {
         "allow-plugins": {
