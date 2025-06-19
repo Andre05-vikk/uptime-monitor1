@@ -1,0 +1,8 @@
+[
+    {
+        "username": "admin",
+        "email": "admin@yourdomain.com",
+        "password_hash": "$2y$10$...",
+        "created_at": "2025-01-01 12:00:00"
+    }
+]
