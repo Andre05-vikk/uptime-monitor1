@@ -30,8 +30,8 @@ nano .env  # or your preferred editor
 # Fish Shell (automatic web server + monitoring)
 ./start.fish
 
-# Access dashboard: http://localhost:8000
-# Login: admin / admin123
+# Access dashboard: http://localhost:8080
+# Login: admin / adminpassword123
 # Monitoring runs automatically every 30 seconds
 ```
 
@@ -43,15 +43,11 @@ nano .env  # or your preferred editor
 
 ### 🎯 What You Get:
 
-- **🌐 Web Dashboard**: http://localhost:8000 (auto-refreshes every 30s)
+- **🌐 Web Dashboard**: http://localhost:8080 (auto-refreshes every 30s)
 - **� Automatic Monitoring**: Checks every 30 seconds automatically  
 - **📧 Email Alerts**: Sent only on status changes (UP ↔ DOWN)
 - **📊 Real-time Logs**: See monitoring activity in terminal
 - **🕐 Estonian Time**: All timestamps in Europe/Tallinn timezone
-
-### 📋 Default Login:
-- **Username**: `admin`
-- **Password**: `admin123`
 
 ---
 
@@ -96,7 +92,7 @@ nano .env
 ```
 
 5. **Access Dashboard**
-- Open: http://localhost:8000
+- Open: http://localhost:8080
 - Login: admin / admin123
 - Add your websites to monitor
 
@@ -136,7 +132,7 @@ nano .env
 ```
 
 **What happens:**
-- ✅ Starts web server on http://localhost:8000
+- ✅ Starts web server on http://localhost:8080
 - ✅ Starts automatic monitoring (30-second intervals)
 - ✅ Opens browser automatically
 - ✅ Shows real-time logs in terminal
@@ -150,7 +146,7 @@ nano .env
 
 ### 3. Using the Dashboard
 
-1. **Login**: http://localhost:8000
+1. **Login**: http://localhost:8080
    - Username: `admin`
    - Password: `admin123`
 
@@ -339,7 +335,7 @@ php monitor.php
 
 ### URLs & Login
 
-- **Dashboard**: http://localhost:8000
+- **Dashboard**: http://localhost:8080
 - **Username**: `admin`
 - **Password**: `admin123`
 
@@ -374,7 +370,7 @@ php monitor.php
 
 
 **Login**: `admin` / `admin123`  
-**URL**: `http://localhost:8000`
+**URL**: `http://localhost:8080`
 
 ---
 

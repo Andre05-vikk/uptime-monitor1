@@ -56,13 +56,15 @@ define('USERS_FILE', __DIR__ . '/users.json');
 // Monitor data storage
 define('MONITORS_FILE', __DIR__ . '/monitors.json');
 
-// Default admin user (you can add more users to users.json)
-$default_users = [
-    'admin' => password_hash('admin123', PASSWORD_DEFAULT)
-];
-
-// Create users file if it doesn't exist
+// Create default admin user from .env if no users exist
 if (!file_exists(USERS_FILE)) {
+    $admin_username = $_ENV['ADMIN_USERNAME'] ?? 'admin';
+    $admin_password = $_ENV['ADMIN_PASSWORD'] ?? 'adminpassword123';
+    
+    $default_users = [
+        $admin_username => password_hash($admin_password, PASSWORD_DEFAULT)
+    ];
+    
     file_put_contents(USERS_FILE, json_encode($default_users, JSON_PRETTY_PRINT));
 }
 
@@ -90,7 +92,8 @@ function is_logged_in() {
 
 // Function to check if current user is admin
 function is_admin() {
-    return isset($_SESSION['username']) && $_SESSION['username'] === 'admin';
+    $admin_username = $_ENV['ADMIN_USERNAME'] ?? 'admin';
+    return isset($_SESSION['username']) && $_SESSION['username'] === $admin_username;
 }
 
 // Function to get current username
@@ -515,7 +518,8 @@ function delete_user($username) {
         return ['success' => false, 'message' => 'Access denied. Admin privileges required.'];
     }
     
-    if ($username === 'admin') {
+    $admin_username = $_ENV['ADMIN_USERNAME'] ?? 'admin';
+    if ($username === $admin_username) {
         return ['success' => false, 'message' => 'Cannot delete admin user.'];
     }
     

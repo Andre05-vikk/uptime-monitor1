@@ -169,7 +169,7 @@ module.exports = {
   workers: 2, // Reduced for session stability
   retries: 1,
   use: {
-    baseURL: 'http://localhost:8000',
+    baseURL: 'http://localhost:8080',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure'
   },
@@ -184,7 +184,7 @@ module.exports = {
 ### Test Environment Setup
 
 **Prerequisites**:
-- PHP server running on `localhost:8000`
+- PHP server running on `localhost:8080`
 - Application properly configured
 - Test data files present
 
@@ -310,7 +310,7 @@ jobs:
       - name: Install Playwright
         run: npx playwright install
       - name: Start PHP server
-        run: php -S localhost:8000 &
+        run: php -S localhost:8080 &
       - name: Run tests
         run: npm test
 ```

@@ -1,0 +1,14 @@
+{
+    "https:\/\/docs.notion-clone-api.hack2you.eu\/": {
+        "status": "up",
+        "timestamp": "2025-06-20 11:28:39",
+        "response_time": 50.18,
+        "message": "SUCCESS: HTTP 200"
+    },
+    "https:\/\/hack2you.eu\/oa-pank\/docs\/": {
+        "status": "down",
+        "timestamp": "2025-06-20 11:28:39",
+        "response_time": 52.21,
+        "message": "FAIL: HTTP 502"
+    }
+}

@@ -6,7 +6,7 @@
 echo "🚀 Starting Uptime Monitor..."
 
 # Check if port 8080 is already in use
-if ss -tuln | grep -q :8080 2>/dev/null; or lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1
+if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1
     echo "⚠️  Port 8080 is already in use. Stopping existing process..."
     lsof -ti:8080 | xargs kill -9 2>/dev/null; or true
     sleep 2
@@ -19,10 +19,10 @@ cd $SCRIPT_DIR
 # Clear any existing PHP sessions
 echo "🧹 Clearing old sessions..."
 if test -d /tmp
-  rm -f /tmp/sess_* 2>/dev/null; or true
+    rm -f /tmp/sess_* 2>/dev/null; or true
 end
 # Also clear local session files if they exist
-test -d .sessions; and rm -f .sessions/* 2>/dev/null; or true
+rm -f .sessions/* 2>/dev/null; or true
 
 # Start PHP development server in background
 echo "🔧 Starting PHP server on localhost:8080..."

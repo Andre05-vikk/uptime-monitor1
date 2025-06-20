@@ -111,21 +111,15 @@ if (is_logged_in()) {
             <div class="error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
         
-        <div class="info">
-            <strong>Default login:</strong><br>
-            Username: admin<br>
-            Password: admin123
-        </div>
-        
         <form method="POST" action="">
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" autocomplete="off" required>
             </div>
             
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" autocomplete="new-password" required>
             </div>
             
             <input type="submit" value="Login">
