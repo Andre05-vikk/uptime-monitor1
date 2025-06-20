@@ -1,6 +1,6 @@
 [
     {
-        "url": "https://example.com",
+        "url": "https://yourwebsite.com",
         "email": "admin@yourdomain.com",
         "added_at": "2025-01-01 12:00:00",
         "status": "active"

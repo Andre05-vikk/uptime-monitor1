@@ -341,16 +341,28 @@ function has_status_changed($url, $current_status, $previous_statuses) {
 }
 
 /**
- * Check if alert was already sent for this URL
+ * Check if alert was already sent for this URL and email in current incident
  */
 function is_alert_already_sent($url, $email) {
     $alerts = load_alerts();
     
+    // Check if there's an active (unresolved) alert for this URL and email
     foreach ($alerts as $alert) {
         if ($alert['url'] === $url && 
             $alert['email'] === $email && 
-            (!isset($alert['status']) || $alert['status'] !== 'resolved')) {
-            return true;
+            (!isset($alert['status']) || $alert['status'] === 'active')) {
+            
+            // Additional check: if alert is more than 24 hours old, allow new alert
+            $alert_time = strtotime($alert['timestamp']);
+            $hours_since_alert = (time() - $alert_time) / 3600;
+            
+            if ($hours_since_alert < 24) {
+                log_message("  Alert already sent for {$url} → {$email} (" . round($hours_since_alert, 1) . " hours ago)");
+                return true;
+            } else {
+                log_message("  Previous alert for {$url} → {$email} is old (" . round($hours_since_alert, 1) . " hours), allowing new alert");
+                return false;
+            }
         }
     }
     
@@ -362,6 +374,24 @@ function is_alert_already_sent($url, $email) {
  */
 function record_alert_sent($url, $email, $error_message) {
     $alerts = load_alerts();
+    
+    // Auto-resolve old alerts for the same URL and email (older than 24 hours)
+    foreach ($alerts as &$alert) {
+        if ($alert['url'] === $url && 
+            $alert['email'] === $email && 
+            (!isset($alert['status']) || $alert['status'] === 'active')) {
+            
+            $alert_time = strtotime($alert['timestamp']);
+            $hours_since_alert = (time() - $alert_time) / 3600;
+            
+            if ($hours_since_alert >= 24) {
+                $alert['status'] = 'auto-resolved';
+                $alert['resolved_at'] = date('Y-m-d H:i:s');
+                $alert['resolution_reason'] = 'Auto-resolved after 24h (new alert triggered)';
+                log_message("  Auto-resolved old alert for {$url} → {$email} (" . round($hours_since_alert, 1) . " hours old)");
+            }
+        }
+    }
     
     $alert = [
         'url' => $url,
@@ -531,19 +561,25 @@ function send_single_recovery_email($url, $email, $response_time) {
         $result = $apiInstance->sendTransacEmail($sendSmtpEmail);
         
         if ($result->getMessageId()) {
-            log_message("  EMAIL SENT: Recovery notification → {$email}");
+            log_message("  EMAIL SENT: Recovery notification → {$email} (Message ID: " . $result->getMessageId() . ")");
             
             // Mark alerts as resolved since the service is back up
             resolve_alerts_for_url($url, $email);
             
             return true;
         } else {
-            log_message("  Recovery email failed to send to {$email} - Brevo error - continuing monitoring");
+            log_message("  Recovery email failed to send to {$email} - Brevo error (no message ID) - continuing monitoring");
             return false;
         }
         
     } catch (Exception $e) {
-        log_message("  Recovery email failed to send to {$email} - Error: " . $e->getMessage() . " - continuing monitoring");
+        log_message("  Recovery email failed to send to {$email} - Error: " . $e->getMessage() . " (Code: " . $e->getCode() . ") - continuing monitoring");
+        
+        // If it's an API rate limit or temporary error, log more details
+        if (strpos($e->getMessage(), 'rate limit') !== false || strpos($e->getMessage(), '429') !== false) {
+            log_message("  Rate limit detected - recovery email will retry on next status change");
+        }
+        
         return false;
     }
 }
@@ -572,10 +608,10 @@ function send_email_alert($url, $email, $error_message, $response_time) {
             continue;
         }
         
-        // Compose email with professional, non-spammy subject
-        $subject = "Service Status Alert - " . parse_url($url, PHP_URL_HOST);
-        $timestamp = date('Y-m-d H:i:s T'); // Include timezone
-        $full_timestamp = date('F j, Y \a\t H:i:s T'); // Readable format with timezone
+        // Send the alert email
+        if (send_single_email_alert($url, $single_email, $error_message, $response_time)) {
+            $success_count++;
+        }
     }
     
     return $success_count > 0;
@@ -709,11 +745,6 @@ function send_single_email_alert($url, $email, $error_message, $response_time) {
         
         // For testing: simulate different scenarios
         if (php_sapi_name() === 'cli') {
-            // In CLI mode (testing), handle different scenarios
-            if (strpos($email, '@example.com') !== false && strpos($url, 'invalid-domain') !== false) {
-                throw new Exception("Simulated email failure for testing");
-            }
-            
             // If API key is not configured, simulate success for tests
             if (BREVO_API_KEY === 'your-brevo-api-key-here') {
                 log_message("  Email sent successfully to {$email} (Brevo simulated for testing)");
@@ -770,11 +801,11 @@ function send_single_email_alert($url, $email, $error_message, $response_time) {
         $result = $apiInstance->sendTransacEmail($sendSmtpEmail);
         
         if ($result->getMessageId()) {
-            log_message("  EMAIL SENT: Outage alert → {$email}");
+            log_message("  EMAIL SENT: Outage alert → {$email} (Message ID: " . $result->getMessageId() . ")");
             record_alert_sent($url, $email, $error_message);
             return true;
         } else {
-            log_message("  EMAIL FAILED: Could not notify {$email}");
+            log_message("  EMAIL FAILED: Could not notify {$email} (no message ID returned)");
             return false;
         }
         

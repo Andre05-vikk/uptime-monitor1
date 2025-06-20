@@ -138,11 +138,26 @@ function register_user($username, $password, $confirm_password) {
         return ['success' => false, 'message' => 'Passwords do not match.'];
     }
     
+    // Check directory permissions
+    $dir = dirname(USERS_FILE);
+    if (!is_writable($dir)) {
+        return ['success' => false, 'message' => 'Directory is not writable. Please contact administrator.'];
+    }
+    
+    // Check if file exists and is writable, or can be created
+    if (file_exists(USERS_FILE) && !is_writable(USERS_FILE)) {
+        return ['success' => false, 'message' => 'Users file is not writable. Please contact administrator.'];
+    }
+    
     // Check if username already exists
     if (!file_exists(USERS_FILE)) {
         $users = [];
     } else {
-        $users = json_decode(file_get_contents(USERS_FILE), true) ?: [];
+        $content = file_get_contents(USERS_FILE);
+        if ($content === false) {
+            return ['success' => false, 'message' => 'Could not read users file. Please contact administrator.'];
+        }
+        $users = json_decode($content, true) ?: [];
     }
     
     if (isset($users[$username])) {
@@ -152,12 +167,24 @@ function register_user($username, $password, $confirm_password) {
     // Add new user
     $users[$username] = password_hash($password, PASSWORD_DEFAULT);
     
-    // Save users file
-    if (file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT))) {
-        return ['success' => true, 'message' => 'Account created successfully! You can now login.'];
-    } else {
-        return ['success' => false, 'message' => 'Failed to create account. Please check file permissions.'];
+    // Save users file with error handling
+    $json_data = json_encode($users, JSON_PRETTY_PRINT);
+    if ($json_data === false) {
+        return ['success' => false, 'message' => 'Failed to encode user data.'];
     }
+    
+    // Use file locking for safe concurrent access
+    $bytes_written = file_put_contents(USERS_FILE, $json_data, LOCK_EX);
+    if ($bytes_written === false) {
+        return ['success' => false, 'message' => 'Failed to create account. Please check file permissions or contact administrator.'];
+    }
+    
+    // Verify the file was actually written
+    if (!file_exists(USERS_FILE) || filesize(USERS_FILE) < 10) {
+        return ['success' => false, 'message' => 'Account creation incomplete. Please try again.'];
+    }
+    
+    return ['success' => true, 'message' => 'Account created successfully! You can now login.'];
 }
 
 // Function to require login (redirect if not logged in)

@@ -365,7 +365,7 @@ if (isset($_GET['msg']) && isset($_GET['type'])) {
             
             <div class="form-group">
                 <label for="url">Website URL to monitor:</label>
-                <input type="url" id="url" name="url" placeholder="https://example.com" 
+                <input type="url" id="url" name="url" placeholder="https://yourwebsite.com" 
                        value="<?php echo htmlspecialchars($edit_monitor['url'] ?? ''); ?>" required>
             </div>
             

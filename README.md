@@ -155,7 +155,7 @@ nano .env
    - Password: `admin123`
 
 2. **Add Website to Monitor**:
-   - Enter URL (e.g., `https://example.com`)
+   - Enter URL (e.g., `https://yourwebsite.com`)
    - Enter your email address
    - Click "Add Monitor"
 
